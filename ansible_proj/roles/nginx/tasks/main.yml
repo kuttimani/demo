@@ -3,12 +3,6 @@
 - name: install nginx using apt
   apt: name=nginx state=present
 
-- name: add user nginx and group
-  group: name=nginx state=present
-
-- name: add nginx user to group
-  user: name=nginx shell=/sbin/nologin createhome=no groups=nginx
-
 - name: replace default config with config for our demo application
   copy: src=default dest=/etc/nginx/sites-available/default mode=0644 owner=nginx group=nginx
 
