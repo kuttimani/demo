@@ -16,7 +16,7 @@ pip install cryptography
 pip install ansible
 git clone https://github.com/kuttimani/demo.git
 cd demo/ansible_proj
-ansible-playbook demoDeploy.yml -i inventories/dev --limit localhost
+ansible-playbook demoDeploy.yml -i inventories/demo--limit localhost
 
 
 
