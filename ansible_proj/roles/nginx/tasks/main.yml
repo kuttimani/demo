@@ -1,0 +1,17 @@
+---
+
+- name: install nginx using apt
+  apt: name=nginx state=present
+
+- name: replace default config with config for our demo application
+  copy: src=default dest=/etc/nginx/sites-available/default mode=0644
+
+- name: add user nexus and group
+  group: name=nexus state=present
+
+- name: add user to group
+  user: name=nexus shell=/sbin/nologin createhome=no groups=nexus
+
+- name: start nginx service
+  service: name=nginx state=started 
+

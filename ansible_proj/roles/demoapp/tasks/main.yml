@@ -1,0 +1,18 @@
+---
+- name: install apt dependencies for demo project 
+  apt: name={{ item }} state=present
+  with_items:
+     - [build-essential, libssl-dev, libffi-dev, python-dev, python-pip]
+
+- name: install uwsgi and cryptography
+  pip: name={{ item }} state=present
+  with_items:
+     - [cryptography, flask, uwsgi]
+
+- name: make directory flaskProj in /home/mani
+  file: path=/home/mani/flaskProj state=directory 
+
+- name: copy demo app files to flakProj location
+  copy: src={{ item }} dest=/home/mani/flaskProj/ mode=0655
+  with_items:
+     - [
