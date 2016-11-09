@@ -1,0 +1,9 @@
+[Unit]
+Description=uWSGI instance to serve demo app
+
+[Service]
+WorkingDirectory=/home/mani/flaskProj
+ExecStart=/usr/local/bin/uwsgi --ini /home/mani/flaskProj/demo.ini
+
+[Install]
+WantedBy=multi-user.target

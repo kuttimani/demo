@@ -17,5 +17,18 @@
   with_items:
      - [demo.ini, demo.py, demo.sock]
 
+- name: set user privilege in app folder
+  file: path=/home/mani/flaskProj mode=0766 owner=www-data group=www-data recurse=yes
+
+- name: copy systemd script for uwsgi to systemd service folder
+  copy: src=uwsgi.service dest=/etc/systemd/system/ mode=0766
+ 
+- name: start systemctl service uwsgi.service
+  shell: "{{ item }}"
+  with_items:
+    - systemctl daemon-reload
+    - systemctl enable uwsgi.service
+    - systemctl start uwsgi.service 
+
 - name: restart nginx
-  service: name=nginx state=restarted  
+  service: name=nginx state=started  
