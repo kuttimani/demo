@@ -31,4 +31,4 @@
     - systemctl start uwsgi.service 
 
 - name: restart nginx
-  service: name=nginx state=started  
+  shell: service nginx restart 
