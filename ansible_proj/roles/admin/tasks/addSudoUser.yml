@@ -1,0 +1,13 @@
+---
+- name: remove password promt tag 
+  lineinfile:
+    dest: /etc/sudoers
+    line: "%admin ALL=(ALL) ALL"
+    state: absent
+
+- name: add no password admin privilege
+  lineinfile:
+    dest: /etc/sudoers
+    line: "%admin ALL=(ALL) NOPASSWD:ALL"
+    state: present
+

@@ -1,5 +1,5 @@
-# dev env files
+#demo env files
 [demo1]
 manilb01.westeurope.cloudapp.azure.com ansible_port=23 ansible_ssh_pass=Admin123$ ansible_ssh_user=mani
 
-localhost ansible_connection=local
+#localhost ansible_connection=local

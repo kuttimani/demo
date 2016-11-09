@@ -2,6 +2,8 @@
 - hosts: all
   become: yes
   tasks:
+  
+    - include: roles/admin/tasks/addSudoUser.yml
 
   roles: 
     - nginx

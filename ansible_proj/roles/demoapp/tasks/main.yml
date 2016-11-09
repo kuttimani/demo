@@ -15,7 +15,7 @@
 - name: copy demo app files to flakProj location
   copy: src={{ item }} dest=/home/mani/flaskProj/ mode=0666 owner=www-data group=www-data
   with_items:
-     - [demo.ini, demo.py, demo.sock]
+    - [demo.ini, demo.py, demo.sock]
 
 - name: set user privilege in app folder
   file: path=/home/mani/flaskProj mode=0766 owner=www-data group=www-data recurse=yes
