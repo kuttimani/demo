@@ -15,4 +15,6 @@
 - name: copy demo app files to flakProj location
   copy: src={{ item }} dest=/home/mani/flaskProj/ mode=0655
   with_items:
-     - [
+     - [demo.ini, demo.py, demo.sock]
+
+
