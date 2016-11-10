@@ -1,0 +1,414 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vm1AdminPassword": {
+      "type": "SecureString"
+    },
+    "vm2AdminPassword": {
+      "type": "SecureString"
+    }
+  },
+  "variables": {
+     "vm1name" : "demo1",
+     "vm1Admin" : "mani",
+     "vm2Admin": "mani",
+     "vm2name" : "demo2",
+     "loadBalancer" : "maniLB",
+     "loadBalancerId" : "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancer'))]",
+     "nic1" : "maniLB_nic1",
+     "nic2" : "maniLB_nic2",
+     "publicIP" : "maniPip",
+     "vnet" : "maniVnet",
+     "subNet" : "maniVnetSubnet",
+     "storage" : "manisg",
+     "frontEndPool" : "maniFEP",
+     "backendPool": "maniBEP",
+     "availabilitySet" : "maniAvailSet",
+     "domainName" : "manilb01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('availabilitySet')]",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vm1name')]",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySet'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.5-LTS",
+            "version": "14.04.201611090"
+          },
+          "osDisk": {
+            "name": "cli3a42128e4fd3e693-os-1478799751327",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', variables('storage'), '.blob.core.windows.net', '/vhds/cli3a42128e4fd3e693-os-1478799751327.vhd')]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "[variables('vm1name')]",
+          "adminUsername": "[variables('vm1Admin')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('vm1AdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nic1'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySet'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storage'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nic1'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vm2name')]",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySet'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.5-LTS",
+            "version": "14.04.201611090"
+          },
+          "osDisk": {
+            "name": "clia5a969478c6755a6-os-1478799904532",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', variables('storage'), '.blob.core.windows.net', '/vhds/clia5a969478c6755a6-os-1478799904532.vhd')]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "[variables('vm2name')]",
+          "adminUsername": "[variables('vm2Admin')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('vm2AdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nic2'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySet'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storage'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nic2'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('loadBalancer')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('frontEndPool')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIP'))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('backendPool')]"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "lbrule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('loadBalancerId'), '/frontendIPConfigurations/', variables('frontEndPool'))]"
+              },
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "protocol": "Tcp",
+              "loadDistribution": "Default",
+              "backendAddressPool": {
+                "id": "[concat(variables('loadBalancerId'), '/backendAddressPools/', variables('backendPool'))]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "healthprobe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 15,
+              "numberOfProbes": 4
+            }
+          }
+        ],
+        "inboundNatRules": [
+          {
+            "name": "ssh1",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('loadBalancerId'), '/frontendIPConfigurations/', variables('frontEndPool'))]"
+              },
+              "frontendPort": 21,
+              "backendPort": 22,
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "ssh2",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('loadBalancerId'), '/frontendIPConfigurations/', variables('frontEndPool'))]"
+              },
+              "frontendPort": 23,
+              "backendPort": 22,
+              "protocol": "Tcp"
+            }
+          }
+        ],
+        "outboundNatRules": [],
+        "inboundNatPools": []
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIP'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nic1')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "default-ip-config",
+            "properties": {
+              "privateIPAddress": "10.0.0.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnet')), '/subnets/', variables('subNet'))]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('loadBalancerId'), '/backendAddressPools/', variables('backendPool'))]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(variables('loadBalancerId'), '/inboundNatRules/ssh1')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnet'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancer'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nic2')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "default-ip-config",
+            "properties": {
+              "privateIPAddress": "10.0.0.5",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnet')), '/subnets/', variables('subNet'))]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('loadBalancerId'), '/backendAddressPools/', variables('backendPool'))]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(variables('loadBalancerId'), '/inboundNatRules/ssh2')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnet'))]",
+        "[variables('loadBalancerId')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIP')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "[variables('domainName')]"
+        }
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnet')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": []
+        },
+        "subnets": [
+          {
+            "name": "[concat(variables('vnet'),'Subnet')]",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_GRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[variables('storage')]",
+      "apiVersion": "2016-01-01",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+   {
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(variables('vm1Name'),'/provision')]",
+  "apiVersion": "2015-06-15",
+  "location": "westeurope",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', variables('vm1name'))]"
+  ],
+  "resources": [],
+  "properties": {
+    "publisher": "Microsoft.OSTCExtensions",
+    "type": "CustomScriptForLinux",
+    "typeHandlerVersion": "1.5",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "fileUris": [ "https://raw.githubusercontent.com/kuttimani/demo/master/provisioning.sh"
+                  ],
+      "commandToExecute": "./provisioning.sh"
+      }
+    }
+  },
+   {
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(variables('vm2name'),'/provision')]",
+  "apiVersion": "2015-06-15",
+  "location": "westeurope",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', variables('vm2name'))]"
+  ],
+  "resources": [],
+  "properties": {
+    "publisher": "Microsoft.OSTCExtensions",
+    "type": "CustomScriptForLinux",
+    "typeHandlerVersion": "1.5",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "fileUris": [ "https://raw.githubusercontent.com/kuttimani/demo/master/provisioning.sh"
+                  ],
+      "commandToExecute": "./provisioning.sh"
+      }
+    }
+  }
+  ]
+}
+
