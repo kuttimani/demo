@@ -1,0 +1,448 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_demo1_adminPassword": {
+      "type": "SecureString"
+    },
+    "virtualMachines_demo2_adminPassword": {
+      "type": "SecureString"
+    },
+    "availabilitySets_maniAvailSet_name": {
+      "defaultValue": "maniAvailSet",
+      "type": "String"
+    },
+    "virtualMachines_demo1_name": {
+      "defaultValue": "demo1",
+      "type": "String"
+    },
+    "virtualMachines_demo2_name": {
+      "defaultValue": "demo2",
+      "type": "String"
+    },
+    "loadBalancers_maniLB_name": {
+      "defaultValue": "maniLB",
+      "type": "String"
+    },
+    "networkInterfaces_maniLB_nic1_name": {
+      "defaultValue": "maniLB_nic1",
+      "type": "String"
+    },
+    "networkInterfaces_maniLB_nic2_name": {
+      "defaultValue": "maniLB_nic2",
+      "type": "String"
+    },
+    "publicIPAddresses_ManiPip_name": {
+      "defaultValue": "maniPip",
+      "type": "String"
+    },
+    "virtualNetworks_maniVnet_name": {
+      "defaultValue": "maniVnet",
+      "type": "String"
+    },
+    "storageAccounts_manisg_name": {
+      "defaultValue": "manisg",
+      "type": "String"
+    },
+    "loadBalancers_maniLB_id": {
+      "defaultValue": "maniLBid",
+      "type": "String"
+    },
+    "loadBalancers_maniLB_id_1": {
+      "defaultValue": "maniLBid1",
+      "type": "String"
+    },
+    "loadBalancers_maniLB_id_2": {
+      "defaultValue": "maniLBid2",
+      "type": "String"
+    },
+    "loadBalancers_maniLB_id_3": {
+     "defaultValue": "maniLBid3",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('availabilitySets_maniAvailSet_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "demo1",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySets_maniAvailSet_name'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "canonical",
+            "offer": "UbuntuServer",
+            "sku": "16.04.0-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "cli8b96c09d81aedefc-os-1478645201537",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', parameters('storageAccounts_manisg_name'), '.blob.core.windows.net', '/vhds/cli8b96c09d81aedefc-os-1478645201537.vhd')]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "demo1",
+          "adminUsername": "mani",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('virtualMachines_demo1_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'maniLB_nic1')]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', 'maniAvailSet')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', 'manisg')]",
+        "[resourceId('Microsoft.Network/networkInterfaces', 'maniLB_nic1')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "demo2",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', 'maniAvailSet')]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "canonical",
+            "offer": "UbuntuServer",
+            "sku": "16.04.0-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "cli42435a8f11d0d4fd-os-1478645439284",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', parameters('storageAccounts_manisg_name'), '.blob.core.windows.net', '/vhds/cli42435a8f11d0d4fd-os-1478645439284.vhd')]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "demo2",
+          "adminUsername": "mani",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('virtualMachines_demo2_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_maniLB_nic2_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySets_maniAvailSet_name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_manisg_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_maniLB_nic2_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "maniLB",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "maniFEP",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'ManiPip')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "maniBEP"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "lbrule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/frontendIPConfigurations/maniFEP')]"
+              },
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "protocol": "Tcp",
+              "loadDistribution": "Default",
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/backendAddressPools/maniBEP')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "healthprobe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 15,
+              "numberOfProbes": 4
+            }
+          }
+        ],
+        "inboundNatRules": [
+          {
+            "name": "ssh1",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/frontendIPConfigurations/maniFEP')]"
+              },
+              "frontendPort": 21,
+              "backendPort": 22,
+              "protocol": "Tcp"
+            }
+          },
+          {
+            "name": "ssh2",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/frontendIPConfigurations/maniFEP')]"
+              },
+              "frontendPort": 23,
+              "backendPort": 22,
+              "protocol": "Tcp"
+            }
+          }
+        ],
+        "outboundNatRules": [],
+        "inboundNatPools": []
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', 'ManiPip')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "maniLB_nic1",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "default-ip-config",
+            "properties": {
+              "privateIPAddress": "10.0.0.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', 'maniVnet'), '/subnets/maniVnetSubnet')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/backendAddressPools/maniBEP')]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/inboundNatRules/ssh1')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_maniVnet_name'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', 'maniLB')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_maniLB_nic2_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "default-ip-config",
+            "properties": {
+              "privateIPAddress": "10.0.0.5",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_maniVnet_name')), '/subnets/maniVnetSubnet')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/backendAddressPools/maniBEP')]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'maniLB'), '/inboundNatRules/ssh2')]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_maniVnet_name'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', 'maniLB')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "ManiPip",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "manilb01"
+        }
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworks_maniVnet_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": []
+        },
+        "subnets": [
+          {
+            "name": "[concat(parameters('virtualNetworks_maniVnet_name'),'Subnet')]",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_GRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[parameters('storageAccounts_manisg_name')]",
+      "apiVersion": "2016-01-01",
+      "location": "westeurope",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+   {
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(parameters('virtualMachines_demo1_name'),'/install1')]",
+  "apiVersion": "2015-06-15",
+  "location": "westeurope",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', 'demo1')]"
+  ],
+  "resources": [],
+  "properties": {
+    "publisher": "Microsoft.OSTCExtensions",
+    "type": "CustomScriptForLinux",
+    "typeHandlerVersion": "1.5",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "fileUris": [ "https://raw.githubusercontent.com/kuttimani/demo/master/test.sh"
+                  ],
+      "commandToExecute": "./test.sh"
+      }
+    }
+  },
+   {
+  "type": "Microsoft.Compute/virtualMachines/extensions",
+  "name": "[concat(parameters('virtualMachines_demo2_name'),'/install2')]",
+  "apiVersion": "2015-06-15",
+  "location": "westeurope",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', 'demo2')]"
+  ],
+  "resources": [],
+  "properties": {
+    "publisher": "Microsoft.OSTCExtensions",
+    "type": "CustomScriptForLinux",
+    "typeHandlerVersion": "1.5",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+      "fileUris": [ "https://raw.githubusercontent.com/kuttimani/demo/master/test.sh"
+                  ],
+      "commandToExecute": "./test.sh"
+      }
+    }
+  }
+  ]
+}
